@@ -53,6 +53,8 @@ gameMain.prototype = {
 
         this.initializeHud();
 
+		        document.body.style.zoom=1.0;
+        this.blur();
 
     },
 
