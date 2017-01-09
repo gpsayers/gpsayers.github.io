@@ -24,6 +24,14 @@ div.style.visibility = 'hidden';
 
 document.querySelector("#gameForm").addEventListener("submit", function(e){
 
+if (navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)) {
+      var viewportmeta = document.querySelector('meta[name="viewport"]');
+      if (viewportmeta) {
+        viewportmeta.setAttribute('content', 'width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0');
+        viewportmeta.setAttribute('content', 'width=device-width, minimum-scale=1.0, initial-scale=1.0');
+      }
+   }
+
     e.preventDefault();
 
 });
