@@ -10,7 +10,7 @@
     <div id="gameDiv"></div>
 
     <div id="gameForm" style="position: absolute; left: 100px; top: 100px;">
-    <form>
+    <form id="testForm">
         <div style="color: white;">Character Name:</div> <input id="name" type="text" name="fname">
 
         </form>
@@ -22,12 +22,14 @@ var div = document.getElementById('gameForm');
 
 div.style.visibility = 'hidden';
 
-document.querySelector("#gameForm").addEventListener("submit", function(e){
-
-	var viewportmeta = document.querySelector('meta[name="viewport"]');
+$('#testForm').on('submit', function(event) {
+     var viewportmeta = document.querySelector('meta[name="viewport"]');
      if (viewportmeta) {
         viewportmeta.setAttribute('content', 'width=device-width, maximum-scale=1.0, initial-scale=1.0');
      }
+  }
+
+document.querySelector("#gameForm").addEventListener("submit", function(e){
 
     e.preventDefault();
 
