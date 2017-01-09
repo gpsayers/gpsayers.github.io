@@ -45,6 +45,10 @@ gameMain.prototype = {
 
         backgroundlayer.resizeWorld();
 
+        game.stage.scaleMode = Phaser.StageScaleMode.EXACT_FIT;
+
+        game.state.scale.refresh();
+
         //game.physics.startSystem(Phaser.Physics.ARCADE);
 
         this.initMobs();
