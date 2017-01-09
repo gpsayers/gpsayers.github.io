@@ -18,7 +18,8 @@
 </body>
 </html>
 <script>
-var div = document.getElementById('gameForm');
+$( document ).ready(function() {
+    var div = document.getElementById('gameForm');
 
 div.style.visibility = 'hidden';
 
@@ -27,4 +28,6 @@ document.querySelector("#gameForm").addEventListener("submit", function(e){
     e.preventDefault();
 
 });
+});
+
 </script>
