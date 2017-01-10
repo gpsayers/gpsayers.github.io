@@ -53,6 +53,7 @@ gameMain.prototype = {
 
         this.initializeHud();
 
+        game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
     },
 
