@@ -14,7 +14,11 @@ createChar.prototype = {
 
       game.add.plugin(Fabrique.Plugins.InputField);
 
-        input = game.add.inputField(10, 90);
+        input = game.add.inputField(10,
+            90,
+            {
+                zoom: false
+        });
        input.setText("Fred");
 
         var button = game.add.button(100, 150,'button', this.getData, this, 'g21776.png','g21766.png','g21786.png','g21766.png' );
