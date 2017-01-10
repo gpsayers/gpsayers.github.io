@@ -53,7 +53,9 @@ gameMain.prototype = {
 
         this.initializeHud();
 
-        game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
+        game.scale.setGameSize(gameProperties.screenWidth, gameProperties.screenHeight);
+
+        //game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
 
     },
 
