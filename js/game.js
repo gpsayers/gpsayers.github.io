@@ -23,8 +23,8 @@ var mainState = function (game) {};
 
 mainState.prototype = {
     preload: function () {
-      game.load.image("hexagon", "hexagon.png");
-		game.load.image("marker", "marker.png");
+      game.load.image("hexagon", "assets/hexagon.png");
+		game.load.image("marker", "assets/marker.png");
   } ,
     
     create: function () {
