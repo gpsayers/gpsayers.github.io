@@ -1,304 +1,159 @@
-var gameMain = function () {};
-
-var playerSprite;
-
-var Mobs = [];
-
-var hudText = {
-    health: {},
-    experience: {},
-    gold: {},
-    optionIcon: {},
-    healthIcon: {},
-    goldIcon: {},
-    spellsIcon: {}
+/**
+ * Created by Garth on 12/1/2015.
+ */
+var gameProperties = {
+    screenWidth: 640,
+    screenHeight: 470
 };
 
-var battleMobs = [];
+var hexagonWidth = 80;
+	var hexagonHeight = 70;
+	var gridSizeX = 10;
+	var gridSizeY = 10;
+	var columns = [Math.ceil(gridSizeY/2),Math.floor(gridSizeY/2)];
+     var moveIndex;
+     var sectorWidth = hexagonWidth/4*3;
+     var sectorHeight = hexagonHeight;
+     var gradient = (hexagonWidth/4)/(hexagonHeight/2);
+     var marker;
+     var hexagonGroup;
+     var hexagonArray = [];
 
-var playerMoveCount = 0;
+var mainState = function (game) {};
 
-gameMain.prototype = {
-
+mainState.prototype = {
     preload: function () {
-        game.load.atlasJSONHash('rpg', 'assets/SpriteSheet.png', 'assets/SpriteJSON.json');
-
-        game.load.tilemap('level', 'assets/tilemap.json', null, Phaser.Tilemap.TILED_JSON);
-
-        game.load.image('gameTiles', 'assets/grass-tiles-2-small.png');
-
-        game.load.json('mobs', 'assets/json/mobs.json');
-
-        game.load.json('player', 'assets/json/player.json');
-
-    },
-
+      game.load.image("hexagon", "hexagon.png");
+		game.load.image("marker", "marker.png");
+  } ,
+    
     create: function () {
-
-        loadSavedFiles();
-
-        map = game.add.tilemap('level');
-
-        map.addTilesetImage('grass-tiles-2-small', 'gameTiles');
-
-        backgroundlayer = map.createLayer('Background');
-
-        backgroundlayer.resizeWorld();
-
-        //game.physics.startSystem(Phaser.Physics.ARCADE);
-
-        this.initMobs();
-
-        this.initPlayer();
-
-        this.initializeHud();
-
-
+        hexagonGroup = game.add.group();
+		game.stage.backgroundColor = "#ffffff"
+	     for(var i = 0; i < gridSizeX/2; i ++){
+	          hexagonArray[i] = [];
+			for(var j = 0; j < gridSizeY; j ++){
+				if(gridSizeX%2==0 || i+1<gridSizeX/2 || j%2==0){
+					var hexagonX = hexagonWidth*i*1.5+(hexagonWidth/4*3)*(j%2);
+					var hexagonY = hexagonHeight*j/2;	
+					var hexagon = game.add.sprite(hexagonX,hexagonY,"hexagon");
+					hexagonGroup.add(hexagon);
+					hexagonArray[i][j]=hexagon;
+					var hexagonText = game.add.text(hexagonX+hexagonWidth/4+5,hexagonY+5,i+","+j);
+					hexagonText.font = "arial";
+					hexagonText.fontSize = 12;
+					hexagonGroup.add(hexagonText);
+				}
+			}
+		}
+		hexagonGroup.y = (game.height-hexagonHeight*Math.ceil(gridSizeY/2))/2;
+          if(gridSizeY%2==0){
+               hexagonGroup.y-=hexagonHeight/4;
+          }
+		hexagonGroup.x = (game.width-Math.ceil(gridSizeX/2)*hexagonWidth-Math.floor(gridSizeX/2)*hexagonWidth/2)/2;
+          if(gridSizeX%2==0){
+               hexagonGroup.x-=hexagonWidth/8;
+          }
+		marker = game.add.sprite(0,0,"marker");
+		marker.anchor.setTo(0.5);
+		marker.visible=false;
+		hexagonGroup.add(marker);
+          moveIndex = game.input.addMoveCallback(checkHex, this); 
     },
-
-    update: function () {
-
-        if (this.delayTimer < game.time.now) {
-            gameVariables.gamePlay.playerCollide = true;
-
-        }
-
-        if (gameVariables.gamePlay.playerCollide == false) {
-            if (game.time.now % 8 > 1 ) {
-                playerSprite.tint = 0xFFFFFF;
-            } else {
-                playerSprite.tint = 0xff0000;
-            }
-        }
-                else {
-            playerSprite.tint = 0xFFFFFF
-        }
-
-
-
-        this.movePlayer();
-
-        this.updateHud();
-
-
-        Mobs.forEach(function (item) {
-
-            if (checkOverlap(playerSprite, item)) {
-
-                //collisionFound = true;
-
-                gameVariables.Mobs.Mob.forEach(function (gvItem) {
-
-                    if (Mobs.indexOf(item) == gvItem.SpriteObj) {
-
-                        //Check if mob is set to collide
-                        if (gameVariables.gamePlay.playerCollide && gameVariables.gamePlay.playerMoving == false) {
-
-                            collide(gvItem);
-
-                        }
-                    }
-
-                });
-
-            }
-
-
-        });
-
-
-    },
-
-    initPlayer: function () {
-
-
-        playerSprite = game.add.sprite(gameVariables.player.positionX, gameVariables.player.positionY, gameVariables.player.Spritesheet, gameVariables.player.FileName);
-
-
-        playerSprite.anchor.setTo(0.5, 0.5);
-
-        game.camera.follow(playerSprite);
-
-        playerSprite.width = 75;
-        playerSprite.height = 75;
-
-        this.delayTimer = game.time.now + 2000;
-
-
-    },
-
-    initMobs: function (group) {
-
-        var i = 0;
-
-        gameVariables.Mobs.Mob.forEach(function (item) {
-
-            Mobs[i] = game.add.sprite(item.StartingX, item.StartingY, item.Spritesheet, item.FileName);
-
-            Mobs[i].anchor.setTo(0.5, 0.5);
-
-            Mobs[i].width = 75;
-            Mobs[i].height = 75;
-
-            if (item.Visible == 'false' || item.Defeated == 'true') {
-
-                Mobs[i].enable = false;
-                Mobs[i].visible = false;
-
-            }
-
-            item.SpriteObj = i;
-
-            i++;
-
-        });
-
-    },
-
-    initializeHud: function () {
-
-        //Health Icon
-        hudText.healthIcon = game.add.sprite(gameProperties.screenWidth - 65, 20, 'rpg', 'heart.png');
-        hudText.healthIcon.anchor.setTo(0.5, 0.5);
-        hudText.healthIcon.fixedToCamera = true;
-
-        //Health Text
-        hudText.health = game.add.text(gameProperties.screenWidth - 50, 8, gameVariables.player.hitpoints);
-        hudText.health.fixedToCamera = true;
-
-        //Option Icon
-        hudText.optionIcon = game.add.sprite(25, gameProperties.screenHeight - 25, 'rpg', 'tools.png');
-        hudText.optionIcon.anchor.setTo(0.5, 0.5);
-        hudText.optionIcon.fixedToCamera = true;
-        hudText.optionIcon.inputEnabled = true;
-        hudText.optionIcon.events.onInputDown.add(function () {
-            saveGame();
-            game.state.start('mainMenu');
-        }, this);
-
-        //Gold Icon
-        hudText.goldIcon = game.add.sprite(gameProperties.screenWidth - 130, 20, 'rpg', 'coin.png');
-        hudText.goldIcon.anchor.setTo(0.5, 0.5);
-        hudText.goldIcon.fixedToCamera = true;
-
-        //Gold Text
-        hudText.gold = game.add.text(gameProperties.screenWidth - 110, 8, gameVariables.player.gold);
-        hudText.gold.fixedToCamera = true;
-
-    },
-
-    updateHud: function () {
-        hudText.health.setText(gameVariables.player.hitpoints);
-        hudText.gold.setText(gameVariables.player.gold);
-    },
-
-    movePlayer: function () {
-
-        if (game.input.activePointer.isUp) {
-            playerMoveCount = 0;
-        }
-
-        if (game.input.activePointer.isDown) {
-
-            playerMoveCount++;
-
-            if (playerMoveCount < 2 && gameVariables.gamePlay.playerMoving == false) {
-
-                var newX = game.input.worldX;
-                var newY = game.input.worldY;
-
-                if (newX > playerSprite.x) {
-                    if (newX - playerSprite.x > Math.abs(newY - playerSprite.y)) {
-                        //Move RIGHT
-                        movePlayerDir('right');
-                    } else {
-                        if (newY > playerSprite.y) {
-                            //Move DOWN
-                            movePlayerDir('down');
-
-                        } else {
-                            //Move UP
-                            movePlayerDir('up');
-                        }
-                    }
-                } else {
-                    if (playerSprite.x - newX > Math.abs(newY - playerSprite.y)) {
-                        //MOVE LEFT
-                        movePlayerDir('left');
-                    } else {
-                        if (newY > playerSprite.y) {
-                            //MOVE DOWN
-                            movePlayerDir('down');
-                        } else {
-                            //MOVE UP
-                            movePlayerDir('up');
-                        }
-                    }
-                }
-
-            }
-
-        }
-
-    },
-
-
+    
 };
 
-function collide(mob) {
+function checkHex(){
+          var candidateX = Math.floor((game.input.worldX-hexagonGroup.x)/sectorWidth);
+          var candidateY = Math.floor((game.input.worldY-hexagonGroup.y)/sectorHeight);
+          var deltaX = (game.input.worldX-hexagonGroup.x)%sectorWidth;
+          var deltaY = (game.input.worldY-hexagonGroup.y)%sectorHeight; 
+          if(candidateX%2==0){
+               if(deltaX<((hexagonWidth/4)-deltaY*gradient)){
+                    candidateX--;
+                    candidateY--;
+               }
+               if(deltaX<((-hexagonWidth/4)+deltaY*gradient)){
+                    candidateX--;
+               }
+          }    
+          else{
+               if(deltaY>=hexagonHeight/2){
+                    if(deltaX<(hexagonWidth/2-deltaY*gradient)){
+                         candidateX--;
+                    }
+               }
+               else{
+                    if(deltaX<deltaY*gradient){
+                         candidateX--;
+                    }
+                    else{
+                         candidateY--;
+                    }
+               }
+          }
+          placeMarker(candidateX,candidateY);
+     }
+     
+function placeMarker(posX,posY){
+     	for(var i = 0; i < gridSizeX/2; i ++){
+			for(var j = 0; j < gridSizeY; j ++){
+				if(gridSizeX%2==0 || i+1<gridSizeX/2 || j%2==0){
+					hexagonArray[i][j].tint = 0xffffff;
+				}
+			}
+		}
+		if(posX<0 || posY<0 || posX>=gridSizeX || posY>columns[posX%2]-1){
+			marker.visible=false;
+		}
+		else{
+			marker.visible=true;
+			marker.x = hexagonWidth/4*3*posX+hexagonWidth/2;
+			marker.y = hexagonHeight*posY;
+			if(posX%2==0){
+				marker.y += hexagonHeight/2;
+			}
+			else{
+				marker.y += hexagonHeight;
+			}
+			var markerX = Math.floor(posX/2);
+			var markerY = posY*2+posX%2;
+			hexagonArray[markerX][markerY].tint = 0xff8800;
+			// up
+			if(markerY-2>=0){
+				hexagonArray[markerX][markerY-2].tint = 0xff0000;
+			}
+			// down
+			if(markerY+2<gridSizeY){
+				hexagonArray[markerX][markerY+2].tint = 0xff0000;
+			}
+			// right
+			if(markerX+markerY%2<gridSizeX/2 && (gridSizeX%2==0 || markerX<Math.floor(gridSizeX/2))){
+				//up
+				if(markerY-1>=0){
+					hexagonArray[markerX+markerY%2][markerY-1].tint = 0xff0000;
+				}
+				// down
+				if(markerY+1<gridSizeY){
+					hexagonArray[markerX+markerY%2][markerY+1].tint = 0xff0000;
+				}
+			}
+			// left
+			if(markerX-1+markerY%2>=0){
+				// up
+				if(markerY-1>=0){
+					hexagonArray[markerX-1+markerY%2][markerY-1].tint = 0xff0000;
+				}
+				// down
+				if(markerY+1<gridSizeY){
+					hexagonArray[markerX-1+markerY%2][markerY+1].tint = 0xff0000;
+				}
+			}
+		}
+	}	
 
-    battleMobs = [];
+var game = new Phaser.Game(gameProperties.screenWidth, gameProperties.screenHeight, Phaser.AUTO, 'gameDiv');
 
-    battleMobs.push(mob);
+game.state.add('main', mainState);
 
-    game.state.start('battleMain');
-}
-
-function movePlayerDir(direction) {
-
-
-    gameVariables.gamePlay.playerMoving = true;
-    var tween;
-
-    if (direction == 'up') {
-        var tween = game.add.tween(playerSprite).to({
-            y: playerSprite.y - gameVariables.gamePlay.playerMovement
-        }, gameVariables.gamePlay.tweenSpeed, Phaser.Easing.Linear.None, true);
-    } else if (direction == 'left') {
-        var tween = game.add.tween(playerSprite).to({
-            x: playerSprite.x - gameVariables.gamePlay.playerMovement
-        }, gameVariables.gamePlay.tweenSpeed, Phaser.Easing.Linear.None, true);
-    } else if (direction == 'right') {
-        var tween = game.add.tween(playerSprite).to({
-            x: playerSprite.x + gameVariables.gamePlay.playerMovement
-        }, gameVariables.gamePlay.tweenSpeed, Phaser.Easing.Linear.None, true);
-    } else if (direction == 'down') {
-        var tween = game.add.tween(playerSprite).to({
-            y: playerSprite.y + gameVariables.gamePlay.playerMovement
-        }, gameVariables.gamePlay.tweenSpeed, Phaser.Easing.Linear.None, true);
-    } else {
-        console.log('Player move unknown direction');
-    }
-
-
-
-
-    tween.onComplete.add(function () {
-        gameVariables.gamePlay.playerMoving = false;
-        gameVariables.player.positionX = playerSprite.x;
-        gameVariables.player.positionY = playerSprite.y;
-
-        saveGame();
-
-    }, this);
-
-
-
-}
-
-function checkOverlap(spriteA, spriteB) {
-    var boundsA = spriteA.getBounds();
-    var boundsB = spriteB.getBounds();
-
-    return Phaser.Rectangle.intersects(boundsA, boundsB);
-}
+game.state.start('main');
