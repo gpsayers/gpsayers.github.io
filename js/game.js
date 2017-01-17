@@ -21,6 +21,28 @@ var hexagonWidth = 80;
 
 var mainState = function (game) {};
 
+function zoomTo (group, scale, duration, world){
+    var bounds       = Phaser.Rectangle.clone(world);
+    var cameraBounds = game.camera.bounds;
+    var postionScale = (1 - scale) / 2;
+    var x      = bounds.width  * postionScale,
+        y      = bounds.height * postionScale,
+        width  = bounds.width  * scale,
+        height = bounds.height * scale;
+    if (!duration) {
+        cameraBounds.x      = x;
+        cameraBounds.y      = y;
+        cameraBounds.width  = width;
+        cameraBounds.height = height;
+        group.scale.setTo(scale);
+    } else {
+        game.add.tween(cameraBounds)
+        .to({x, y, width, height}, duration).start();
+        return game.add.tween(group.scale)
+        .to({x: scale, y: scale}, duration).start();
+    }
+}
+
 mainState.prototype = {
     preload: function () {
       game.load.image("hexagon", "assets/hexagon.png");
@@ -58,7 +80,16 @@ mainState.prototype = {
 		marker.anchor.setTo(0.5);
 		marker.visible=false;
 		hexagonGroup.add(marker);
-          moveIndex = game.input.addMoveCallback(checkHex, this); 
+		moveIndex = game.input.addMoveCallback(checkHex, this);
+		game.input.mouse.mouseWheelCallback = function (event) {
+		    var wheelDelt = game.input.mouse.wheelDelta;
+		    if (wheelDelt < 0) {
+		        zoomTo(hexagonGroup, 1, 10, game);
+		    } else {
+		        zoomTo(hexagonGroup, 2, 10, game);
+		    }
+		    
+		};
     },
     
 };
@@ -92,8 +123,9 @@ function checkHex(){
                     }
                }
           }
-          placeMarker(candidateX,candidateY);
-     }
+          placeMarker(candidateX, candidateY);
+
+}
      
 function placeMarker(posX,posY){
      	for(var i = 0; i < gridSizeX/2; i ++){
@@ -151,6 +183,7 @@ function placeMarker(posX,posY){
 			}
 		}
 	}	
+
 
 var game = new Phaser.Game(gameProperties.screenWidth, gameProperties.screenHeight, Phaser.AUTO, 'gameDiv');
 
